@@ -10,8 +10,8 @@ contract FairPlay {
     // float?
     address contractAddress;
     uint256  public timeout;
-    bool cashOutDispute;
-    bytes32 contentDispute;
+    uint cashOutDisputeNonce;
+    bytes32 contentDisputeMerkelLeaaf;
     bool settled;
 
     // timouts for dispute and for whole interaction for cashing out
@@ -19,12 +19,8 @@ contract FairPlay {
 
 
   struct AppState {
-    uint clientBalance;
-    uint merchantBalance;
     uint nonce;
-    // content, not merkelleef
     bytes32 merkelLeaf;
-    bool mutualClose;
     
   }
   
@@ -38,61 +34,84 @@ contract FairPlay {
         
    }
    
+//   client enters contract
    function enter() payable public {
        require(msg.value == price);
        client = msg.sender;
    }
    
+//   convert any given app state to signable digest
    function stateToDigest(AppState appState) public returns (bytes32){
         bytes32 inputAppHash = keccak256(abi.encode(appState));
         return keccak256(contractAddress, inputAppHash);
    }    
    
-   function cashOut(AppState appState, bytes sig) payable public{
-       require(!cashOutDispute );
-    //   !contentDispute);
-       bytes32 digest = stateToDigest(appState);
-       require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
-       cashOutState = appState;
+//   client starts a "claim" by trying to cash out (note that client has the right to claim w/ any appState)
+   function clientInitCashOut(AppState appState) public {
+       require(msg.sender == client);
+       cashOutDisputeNonce = appState.nonce;
        timeout = now + 3600;
    }
-   
-   function disputeContent(AppState appState, bytes sig){
-       require(msg.sender == client);
-       bytes32 digest = stateToDigest(appState);
-       require(recoverSigner(digest, sig) == merchant);
-       contentDispute = appState.merkelLeaf;
-       
-       appState.clientBalance = price * 2;
-       appState.merchantBalance = 0;
-       cashOutState = appState;
-   }
-   
-//   respondDisputeContent()
-   
-   function disputeCashOut(AppState appState, bytes sig){
-        // bunch of require not settleds everywhere
-        require(cashOutDispute);
+
+    // clients claim was not disputed, can settle
+      function clientClaimFunds() public {
+          require(now > timeout);
+          require(cashOutDisputeNonce > 0);
+          settleWithNonce(cashOutDisputeNonce);
+      }
+
+    // merchant punishes client for cashing out stale txn
+    function disputeCashOut(AppState appState, bytes sig) public{
+        require(now < timeout);
+        require(cashOutDisputeNonce > 0);
+        require(msg.sender == merchant);
         bytes32 digest = stateToDigest(appState);
         require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
-        if(appState.nonce > cashOutState.nonce){
+        if(appState.nonce > cashOutDisputeNonce){
             // full punishment or naw?
-            cashOutState = appState;
-            settled = true;
+            settleWithNonce(dataPacketsCount);
         }
+        // else give it to him?
    }
-   
-   function claimFunds() payable public {
-       if (!settled){
-           require(cashOutDispute);
-        //   || contentDispute);
-           require((now > timeout));
-       }
 
-       client.transfer(cashOutState.clientBalance);
-       merchant.transfer(cashOutState.merchantBalance);
-       
+
+    // finalizes - merchant can  always cash out with client's signature
+   function merchantCashOut(AppState appState, bytes sig) public {
+       require(msg.sender == merchant);
+       if (appState.nonce == dataPacketsCount){
+           settleWithNonce(appState.nonce);
+       } else {
+            bytes32 digest = stateToDigest(appState);
+            require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
+            settleWithNonce(appState.nonce);
+       }
    }
+    // client requests merkel proof of content
+     function disputeContent(AppState appState, bytes sig){
+            require(msg.sender ==  client);
+            bytes32 digest = stateToDigest(appState);
+            require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
+            contentDisputeMerkelLeaaf = appState.merkelLeaf;
+            timeout = now + 3600;
+        }
+
+// finalizes:
+        // function merchantRespondDisputeContent
+        // requrie within timeout
+        // merkelproof
+        // function merchantRespondDisputeContent()
+
+        // require(now < timeout)
+
+
+   function settleWithNonce(uint nonce) private {
+       uint costPer = price / dataPacketsCount;
+       client.transfer(costPer * nonce);     
+       merchant.transfer(address(this).balance);
+   }
+
+  
+
    
     function counterPartyOf(address user)public returns(address){
         if (user == merchant){
@@ -102,6 +121,7 @@ contract FairPlay {
         }
         require(false);
     }
+    
      function splitSignature(bytes sig)
        public
         returns (uint8, bytes32, bytes32)
@@ -137,9 +157,7 @@ contract FairPlay {
         return ecrecover(message, v, r, s);
     }
     
-    
-  
-    
+
   
 
 }
