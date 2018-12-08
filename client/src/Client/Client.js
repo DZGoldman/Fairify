@@ -26,6 +26,12 @@ class Client extends Component {
           case "EnterStream":
             this.props.setParentState({client:data.args.client})
             break;
+          case "Start":
+            this.props.getAndSetData();
+            break;
+          case "Init":
+          this.props.getAndSetData();
+            break;
   
         }
       });

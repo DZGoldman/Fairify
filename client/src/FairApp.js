@@ -31,6 +31,20 @@ class FairApp extends Component {
       then && then(data)
     }
 
+    getAndSetData = () =>{
+      this.getChainStateData(async (data)=>{
+        this.setState({
+          chainData: {
+            merchant: data.merchant,
+            merkelRoot: data.merkelRoot,
+            price: data.price,
+            dataPacketsCount: data.dataPacketsCount,
+        
+        }        
+      })
+    })
+    }
+
     setParentState = (newState)=>{
       this.setState(newState)
     }
@@ -50,6 +64,7 @@ class FairApp extends Component {
              balance={this.state.balance}
              setParentState={this.setParentState}
              client = {this.state.client}
+             getAndSetData = {this.getAndSetData}
         
       />:       <Client
       sendMessage ={this.props.sendMessage}
@@ -64,6 +79,8 @@ class FairApp extends Component {
       balance={this.state.balance}
       setParentState={this.setParentState}
       client = {this.state.client}
+      getAndSetData = {this.getAndSetData}
+
 
 
 

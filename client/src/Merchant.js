@@ -24,18 +24,18 @@ class Merchant extends Component {
     // this.initData()
 
   };
-  initData = () =>{
+  initData = async () =>{
     const leaves = this.state.dataPackets.map(x => keccak256(x)).sort(Buffer.compare)
-    console.log('LEAVES', leaves)
     const tree = new MerkleTree(leaves,keccak256)
     const root = buf2hex(tree.getRoot());
-    console.log('MERKLEROOT', root)
-    this.props.sendMessage({
-      to:this.props.client, 
-      from: this.props.merchant,
-      leaves,
-      type: 'merkelLeaves'
-    })
+    await this.props.guessContract.init(root, leaves.length)
+ 
+    // this.props.sendMessage({
+    //   to:this.props.client, 
+    //   from: this.props.merchant,
+    //   leaves,
+    //   type: 'merkelLeaves'
+    // })
     }
 
   setEvents = async () => {
@@ -48,6 +48,7 @@ class Merchant extends Component {
             case "ClientCashOut":
             this.handleClientCashOut(data.args.nonce);
             break;
+            
   
         }
       });

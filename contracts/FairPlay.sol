@@ -26,13 +26,15 @@ ChainState cs;
   }
 event EnterStream(address client);
 event ClientCashOut(uint nonce);
+event Init(address merchant, uint price, bytes32 merkelRoot, uint dataPacketsCount);
+event ContentDispute(string contentDisputeDataPacket);
 
    constructor(bytes32 _merketRoot, uint _dataPacketsCount) payable{
         cs = ChainState({
-            merchant: msg.sender,
+            merchant: address(0),
             client: address(0),
-            merkelRoot: _merketRoot,
-            price: msg.value,
+            merkelRoot: '',
+            price: 0,
             dataPacketsCount:  _dataPacketsCount,
             timeout: 0,
             contractAddress: address(this),
@@ -41,6 +43,14 @@ event ClientCashOut(uint nonce);
         });
 
 
+   }
+
+   function init(bytes32 _merketRoot, uint _dataPacketsCount)  public payable {
+       cs.price = msg.value;
+       cs.merchant = msg.sender;
+       cs.merkelRoot= _merketRoot;
+       cs.dataPacketsCount = _dataPacketsCount;
+       emit Init(cs.merchant, cs.price, cs.merkelRoot, cs.dataPacketsCount);
    }
 
 //   client enters contract
@@ -114,6 +124,7 @@ event ClientCashOut(uint nonce);
             require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
             cs.contentDisputeDataPacket = appState.dataPacket;
             cs.timeout = now + 3600;
+            emit ContentDispute(cs.contentDisputeDataPacket);
         }
 
 // finalizes:
