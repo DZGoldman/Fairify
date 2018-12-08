@@ -8,7 +8,7 @@ window.utils = utils;
 window.ethers = ethers;
 
 class FairApp extends Component {
-    state ={chainData: {}, balance: 0}
+    state ={chainData: {}, balance: 0, client:''}
 
     componentDidMount = async  (then) =>{
       this.getChainStateData(async (data)=>{
@@ -47,6 +47,7 @@ class FairApp extends Component {
              chainData = {this.state.chainData}
              balance={this.state.balance}
              setParentState={this.setParentState}
+             client = {this.state.client}
         
       />:       <Client
       sendMessage ={this.props.sendMessage}
@@ -60,6 +61,8 @@ class FairApp extends Component {
       chainData = {this.state.chainData}
       balance={this.state.balance}
       setParentState={this.setParentState}
+      client = {this.state.client}
+
 
 
     />

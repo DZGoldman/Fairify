@@ -33,7 +33,6 @@ class Merchant extends Component {
   }
 
   initiateStream = async (client) => {
-    console.log('initing stream',client )
     this.props.setParentState({client})
     this.sendDataPacket()
   }
@@ -48,6 +47,7 @@ class Merchant extends Component {
     const appState = {
       nonce: newNonce,
       dataPacket: "some data" //TODO 
+      // this.state.datapackets[newNonce]
     };
 
     this.setState({appState}, async ()=>{
@@ -67,12 +67,10 @@ class Merchant extends Component {
   handleIncomingPayment = async (data) =>{
     const stateDigest = await this.props.guessContract.stateToDigest(data.appState);
     let recovered = utils.recoverAddress(stateDigest, data.signature);
-    // if (recovered != this.props.chainData.client) {
-    //   console.log('invalid sig')
-    //   return false;
-    // } else {
-    //     console.log('valid signature')
-    // }
+    if (recovered != this.props.client) {
+      console.warn('INVALID sig!!!', recovered, this.props.client)
+      return false;
+    } 
     this.sendDataPacket()
   }
   handleIncomingMessage = async msg => {

@@ -58,9 +58,14 @@ class Client extends Component {
     if (data.appState.nonce < totalPackets){
         
         const signature = this.props.signingKey.signDigest(stateDigest);
+        let recovered = utils.recoverAddress(stateDigest, signature);
+        
+        if (recovered != this.props.client){
+            console.warn('INVALID sig!!!', recovered, this.props.client)
+        }
         this.props.sendMessage({
-            to:this.props.client, 
-            from: this.props.merchant,
+            to:this.props.merchant, 
+            from: this.props.client,
             appState: data.appState,
             signature,
             type: 'payment'
