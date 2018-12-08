@@ -2,9 +2,9 @@ pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 contract FairPlay {
 
- 
+
     // timouts for dispute and for whole interaction for cashing out
-    
+
 struct ChainState {
     address merchant;
     address client;
@@ -22,7 +22,7 @@ ChainState cs;
   struct AppState {
     uint nonce;
     string dataPacket;
-    
+
   }
 event EnterStream(address client);
 
@@ -38,28 +38,28 @@ event EnterStream(address client);
             cashOutDisputeNonce: 0,
             contentDisputeDataPacket: ''
         });
-   
-        
+
+
    }
-   
+
 //   client enters contract
    function enter() payable public {
        require(msg.value == cs.price);
        cs.client = msg.sender;
        emit EnterStream(msg.sender);
    }
-   
+
    function getChainStateData () public view returns(ChainState){
        return cs;
    }
 
-   
+
 //   convert any given app state to signable digest
    function stateToDigest(AppState appState) public view returns (bytes32){
         bytes32 inputAppHash = keccak256(abi.encode(appState));
         return keccak256(cs.contractAddress, inputAppHash);
-   }    
-   
+   }
+
 //   client starts a "claim" by trying to cash out (note that client has the right to claim w/ any appState)
    function clientInitCashOut(AppState appState) public {
        require(msg.sender == cs.client);
@@ -117,16 +117,63 @@ event EnterStream(address client);
 
         // require(now < timeout)
 
+    function merchantDisputeResponse(
+      bytes32[] _proof
+    )
+      public
+    {
+      require(now < cs.timeout);
+      require(msg.sender == cs.merchant);
+
+      require(cs.contentDisputeDataPacket != '');
+
+      bool result = verify(_proof, cs.merkelRoot, keccak256(cs.contentDisputeDataPacket));
+
+      if (result == true) {
+        settleWithNonce(cs.dataPacketsCount);
+      } else {
+        settleWithNonce(0);
+      }
+    }
+
+    function verify(
+      bytes32[] proof,
+      bytes32 root,
+      bytes32 leaf
+    )
+      public
+      pure
+      returns (bool)
+    {
+      bytes32 computedHash = leaf;
+
+      for (uint256 i = 0; i < proof.length; i++) {
+        bytes32 proofElement = proof[i];
+
+        if (computedHash < proofElement) {
+          // Hash(current computed hash + current element of the proof)
+          computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+        } else {
+          // Hash(current element of the proof + current computed hash)
+          computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+        }
+      }
+
+      // Check if the computed hash (root) is equal to the provided root
+      return computedHash == root;
+    }
+
+
 
    function settleWithNonce(uint nonce) private {
        uint costPer = cs.price / cs.dataPacketsCount;
-       cs.client.transfer(costPer * nonce);     
+       cs.client.transfer(costPer * nonce);
        cs.merchant.transfer(address(this).balance);
    }
 
-  
 
-   
+
+
     function counterPartyOf(address user)public returns(address){
         if (user == cs.merchant){
             return cs.client;
@@ -135,7 +182,7 @@ event EnterStream(address client);
         }
         require(false);
     }
-    
+
      function splitSignature(bytes sig)
        public
         returns (uint8, bytes32, bytes32)
@@ -170,8 +217,8 @@ event EnterStream(address client);
 
         return ecrecover(message, v, r, s);
     }
-    
 
-  
+
+
 
 }
