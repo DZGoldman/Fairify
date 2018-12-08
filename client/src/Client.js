@@ -31,7 +31,7 @@ class Client extends Component {
     console.log("MESSAGE RECEIVED:", msg);
     switch (msg.data.type) {
       case "dataPacket":
-        // this.receiveOffChainTxn(msg.data);
+        this.respondToDataPacket(msg)
         break;
       case "fullMerkelTree":  
         break;
@@ -39,7 +39,22 @@ class Client extends Component {
     }
   };
 
+  respondToDataPacket = async (msg)=> {
+    // verify signature
+    const data = msg.data;
+    const stateDigest = await this.props.guessContract.stateToDigest(data.appState);
+    let recovered = utils.recoverAddress(stateDigest, data.signature);
+    if (recovered != this.props.chainData.merchant) {
+      return false;
+    } else {
+        console.log('valid signature')
+    }
+    // verify data
 
+    // send payment if not last
+    // const totalPackets = this.props.chainData.dataPacketsCount.toNumber()
+
+  }
 
   enter = async  () =>{
     this.props.guessContract.enter({value: this.props.chainData.price})
