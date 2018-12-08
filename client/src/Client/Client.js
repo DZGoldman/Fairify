@@ -31,6 +31,10 @@ class Client extends Component {
       });
   }
 
+  beEvil = async() => {
+    this.props.guessContract.clientInitCashOut({nonce: 0, dataPacket: ''})
+  }
+
   handleIncomingMessage = async msg => {
     if (msg.from == this.props.accounts[0]) {
       return false;
@@ -50,12 +54,12 @@ class Client extends Component {
   handleMerkleLeaves =  async (msg) => {
     var leaves = msg.data.leaves;
     console.log('LEAVESPRE', leaves)
-    leaves = leaves.map((leaf) => new Uint8Array(leaf).buffer)
+    leaves = leaves.map((leaf) => Buffer.from(leaf))
     console.log('LEAVESPost', leaves)
 
     const tree = new MerkleTree(leaves, keccak256)
     const root = buf2hex(tree.getRoot());
-    console.log('MERKLEROOT')
+    console.log('MERKLEROOT', root)
     if (root == this.props.chainData.merkelRoot){
       const leavesAsHexes = leaves.map(buf2hex)
       this.setState({leavesAsHexes});

@@ -15,13 +15,14 @@ class Merchant extends Component {
     dataPackets: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
     latestPayment: {},
     nonce: 0,
-    appState: {nonce: 0}
+    appState: {nonce: -1},
+    appStateSig: ''
   }
   componentDidMount = async () => {
     window.m = this
     this.props.socket.on("message_data", this.handleIncomingMessage);
     this.setEvents();
-    this.initData()
+    // this.initData()
 
   };
   initData = () =>{
@@ -45,10 +46,21 @@ class Merchant extends Component {
           case "EnterStream":
             this.initiateStream(data.args.client)
             break;
+            case "ClientCashOut":
+            this.handleClientCashOut(data.args.nonce);
+            break;
   
         }
       });
   }
+
+  handleClientCashOut(nonce){
+    if(this.state.appState.nonce > nonce){
+      console.log('slash')
+      this.props.guessContract.disputeCashOut(this.state.appState,  utils.joinSignature(this.state.appStateSig))
+    }
+  }
+
 
   initiateStream = async (client) => {
     this.props.setParentState({client})
@@ -64,7 +76,7 @@ class Merchant extends Component {
     console.log('NONCE', newNonce)
     const appState = {
       nonce: newNonce,
-      dataPacket: "some data" //TODO 
+      dataPacket: this.state.dataPackets[newNonce] //TODO 
       // this.state.datapackets[newNonce]
     };
 
@@ -85,11 +97,15 @@ class Merchant extends Component {
   handleIncomingPayment = async (data) =>{
     const stateDigest = await this.props.guessContract.stateToDigest(data.appState);
     let recovered = utils.recoverAddress(stateDigest, data.signature);
+
     if (recovered != this.props.client) {
       console.warn('INVALID sig!!!', recovered, this.props.client)
       return false;
     } 
-    this.sendDataPacket()
+    this.setState({appState: data.appState, appStateSig: data.signature}, ()=>{
+
+      this.sendDataPacket()
+    })
   }
   handleIncomingMessage = async msg => {
     if (msg.sender == this.props.accounts[0]) {

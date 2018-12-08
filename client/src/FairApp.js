@@ -11,8 +11,8 @@ class FairApp extends Component {
     state ={chainData: {}, balance: 0, client:''}
 
     componentDidMount = async  (then) =>{
+      window.f = this
       this.getChainStateData(async (data)=>{
-        console.log('????', data)
         this.setState({
           chainData: {
             merchant: data.merchant,
@@ -26,6 +26,7 @@ class FairApp extends Component {
     }
     getChainStateData = async (then) =>{
       const data = await this.props.guessContract.getChainStateData()
+      console.log(data)
       then(data)
     }
 

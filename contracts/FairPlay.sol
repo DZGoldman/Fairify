@@ -25,6 +25,7 @@ ChainState cs;
 
   }
 event EnterStream(address client);
+event ClientCashOut(uint nonce);
 
    constructor(bytes32 _merketRoot, uint _dataPacketsCount) payable{
         cs = ChainState({
@@ -65,6 +66,7 @@ event EnterStream(address client);
        require(msg.sender == cs.client);
        cs.cashOutDisputeNonce = appState.nonce;
        cs.timeout = now + 3600;
+       emit ClientCashOut(appState.nonce);
    }
 
     // clients claim was not disputed, can settle
@@ -164,7 +166,7 @@ event EnterStream(address client);
     }
 
 
-
+// TODO: handle collatoral better
    function settleWithNonce(uint nonce) private {
        uint costPer = cs.price / cs.dataPacketsCount;
        cs.client.transfer(costPer * nonce);
