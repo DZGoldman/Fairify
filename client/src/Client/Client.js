@@ -109,8 +109,12 @@ class Client extends Component {
     // verify data
     const dataPacket = data.appState.dataPacket;
     const packetAsHex = buf2hex(keccak256(dataPacket));
-    if ( !this.state.hexLeavesSet.has(packetAsHex)){
+    if ( !this.state.hexLeavesSet.has(packetAsHex)
+    //  || data.appState.nonce == 3 
+    ){
       console.warn('INVALID CONTENT!')
+      
+      this.props.guessContract.disputeContent(data.appState, utils.joinSignature(data.signature))
       return
 
     }

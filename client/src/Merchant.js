@@ -19,7 +19,8 @@ class Merchant extends Component {
     leaves: [],
     sampleData: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
     musicData: [],
-    textData:[]
+    textData:[],
+    tree: {}
   }
   componentDidMount = async () => {
     window.m = this
@@ -34,7 +35,7 @@ class Merchant extends Component {
     const tree = new MerkleTree(leaves,keccak256)
     const root = buf2hex(tree.getRoot());
     await this.props.guessContract.init(root, leaves.length)
-    this.setState({leaves, dataPackets: data})
+    this.setState({leaves, dataPackets: data, tree})
 
     }
 
@@ -57,8 +58,8 @@ class Merchant extends Component {
             case "ClientCashOut":
             this.handleClientCashOut(data.args.nonce);
             break;
-            case "Init":
-            // this.sendLeaves();
+            case "ContentDispute":
+            this.handleContentDispute(data.args.contentDisputeDataPacket);
             break;
             
   
@@ -68,6 +69,15 @@ class Merchant extends Component {
 
   test =  async () =>{
     await this.props.guessContract.merchantClaimsAll()
+  }
+
+  handleContentDispute = async (contentDisputeDataPacket) =>{
+    console.log('?????', contentDisputeDataPacket)
+    var proof = this.state.tree.getProof( keccak256(contentDisputeDataPacket));
+    proof = proof.map(buf2hex);
+    // await this.props.guessContract.merchantDisputeResponse(proof);
+    await this.props.guessContract.merchantDisputeResponseTest(contentDisputeDataPacket);
+
   }
 
   handleClientCashOut(nonce){

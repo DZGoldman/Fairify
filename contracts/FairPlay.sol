@@ -181,6 +181,23 @@ event ContentDispute(string contentDisputeDataPacket);
       return computedHash == root;
     }
 
+       function merchantDisputeResponseTest(
+      string _proof
+    )
+      public
+    {
+      require(now < cs.timeout);
+      require(msg.sender == cs.merchant);
+
+      require(bytes(cs.contentDisputeDataPacket).length!= 0);
+      bool result = true;
+      if (result == true) {
+        merchantClaimsAll();
+      } else {
+        settleWithNonce(0);
+      }
+    }
+
 
 // TODO: handle collatoral better
    function settleWithNonce(uint nonce) private {
