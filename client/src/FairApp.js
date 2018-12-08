@@ -12,16 +12,16 @@ class FairApp extends Component {
 
     componentDidMount = async  (then) =>{
       this.getChainStateData(async (data)=>{
-        console.log('????', )
+        console.log('????', data)
         this.setState({
-          
           chainData: {
             merchant: data.merchant,
             merkelRoot: data.merkelRoot,
             price: data.price,
             dataPacketsCount: data.dataPacketsCount,
         
-        }        })
+        }        
+      })
     })
     }
     getChainStateData = async (then) =>{
@@ -29,11 +29,14 @@ class FairApp extends Component {
       then(data)
     }
 
+    setParentState = (newState)=>{
+      this.setState(newState)
+    }
   render() {
     return (
       <div className="App">
        {this.props.isMerchant ?  <Merchant
-             sendMessage ={this.sendMessage}
+             sendMessage ={this.props.sendMessage}
              wallet={this.props.wallet}
              guessContract={this.props.guessContract}
              socket={this.props.socket}
@@ -43,9 +46,10 @@ class FairApp extends Component {
              getChainStateData = {this.getChainStateData}
              chainData = {this.state.chainData}
              balance={this.state.balance}
+             setParentState={this.setParentState}
         
       />:       <Client
-      sendMessage ={this.sendMessage}
+      sendMessage ={this.props.sendMessage}
       wallet={this.props.wallet}
       guessContract={this.props.guessContract}
       socket={this.props.socket}
@@ -55,6 +59,8 @@ class FairApp extends Component {
       getChainStateData = {this.getChainStateData}
       chainData = {this.state.chainData}
       balance={this.state.balance}
+      setParentState={this.setParentState}
+
 
     />
       

@@ -15,16 +15,17 @@ struct ChainState {
     address contractAddress;
     uint256 timeout;
     uint cashOutDisputeNonce;
-    bytes32 contentDisputeMerkelLeaf;
+    string contentDisputeDataPacket;
 }
 ChainState cs;
 
   struct AppState {
     uint nonce;
-    bytes32 merkelLeaf;
+    string dataPacket;
     
   }
-  
+event EnterStream(address _client);
+
    constructor(bytes32 _merketRoot, uint _dataPacketsCount) payable{
         cs = ChainState({
             merchant: msg.sender,
@@ -35,7 +36,7 @@ ChainState cs;
             timeout: 0,
             contractAddress: address(this),
             cashOutDisputeNonce: 0,
-            contentDisputeMerkelLeaf: ''
+            contentDisputeDataPacket: ''
         });
    
         
@@ -45,6 +46,7 @@ ChainState cs;
    function enter() payable public {
        require(msg.value == cs.price);
        cs.client = msg.sender;
+       emit EnterStream(msg.sender);
    }
    
    function getChainStateData () public view returns(ChainState){
@@ -53,7 +55,7 @@ ChainState cs;
 
    
 //   convert any given app state to signable digest
-   function stateToDigest(AppState appState) public returns (bytes32){
+   function stateToDigest(AppState appState) public view returns (bytes32){
         bytes32 inputAppHash = keccak256(abi.encode(appState));
         return keccak256(cs.contractAddress, inputAppHash);
    }    
@@ -103,7 +105,7 @@ ChainState cs;
             require(msg.sender ==  cs.client);
             bytes32 digest = stateToDigest(appState);
             require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
-            cs.contentDisputeMerkelLeaf = appState.merkelLeaf;
+            cs.contentDisputeDataPacket = appState.dataPacket;
             cs.timeout = now + 3600;
         }
 

@@ -17,7 +17,7 @@ class Client extends Component {
         console.log("*** On Chain Event Event ***", data.event, "****");
         switch (data.event) {
           case "EnterStream":
-            //
+            this.props.setParentState({client:data.args.client})
             break;
   
         }
@@ -25,7 +25,7 @@ class Client extends Component {
   }
 
   handleIncomingMessage = async msg => {
-    if (msg.sender == this.props.accounts[0]) {
+    if (msg.from == this.props.accounts[0]) {
       return false;
     }
     console.log("MESSAGE RECEIVED:", msg);
