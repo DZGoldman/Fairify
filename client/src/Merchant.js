@@ -12,11 +12,14 @@ window.ethers = ethers;
 class Merchant extends Component {
 
   state = {
-    dataPackets: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
+    dataPackets: [],
     latestPayment: {},
     appState: {nonce: -1},
     appStateSig: '',
-    leaves: []
+    leaves: [],
+    sampleData: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
+    musicData: [],
+    textData:[]
   }
   componentDidMount = async () => {
     window.m = this
@@ -25,18 +28,14 @@ class Merchant extends Component {
     // this.initData()
 
   };
-  initData = async () =>{
-    const leaves = this.state.dataPackets.map(x => keccak256(x)).sort(Buffer.compare)
+  initData = async (index) =>{
+    const data = [this.state.sampleData, this.state.musicData, this.state.textData];
+    const leaves = data.map(x => keccak256(x)).sort(Buffer.compare)
     const tree = new MerkleTree(leaves,keccak256)
     const root = buf2hex(tree.getRoot());
     await this.props.guessContract.init(root, leaves.length)
-    this.setState({leaves})
-    // this.props.sendMessage({
-    //   to:this.props.client, 
-    //   from: this.props.merchant,
-    //   leaves,
-    //   type: 'merkelLeaves'
-    // })
+    this.setState({leaves, dataPackets: data})
+
     }
 
     sendLeaves(){
@@ -74,7 +73,10 @@ class Merchant extends Component {
   handleClientCashOut(nonce){
     if(this.state.appState.nonce > nonce){
       console.log('slash')
-      this.props.guessContract.disputeCashOut(this.state.appState,  utils.joinSignature(this.state.appStateSig))
+      window.setTimeout(()=>{
+
+        this.props.guessContract.disputeCashOut(this.state.appState,  utils.joinSignature(this.state.appStateSig))
+      }, 1000)
     }
   }
 
@@ -137,7 +139,11 @@ class Merchant extends Component {
   };
 
   render() {
-    return <div className="App">merchant app</div>;
+    return <div className="App">
+      <button onClick={()=>{this.initData(0)}}>init sample</button>
+      <button  onClick={()=>{this.initData(1)}} >init audio</button>
+      <button  onClick={()=>{this.initData(2) }} > init text </button>
+    </div>
   }
 }
 
