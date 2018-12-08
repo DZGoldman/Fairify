@@ -10,6 +10,18 @@ class Merchant extends Component {
     this.props.socket.on("message_data", this.handleIncomingMessage);
   };
 
+
+  setEvents = async () => {
+    this.props.guessContract.on("*", data => {
+        console.log("*** On Chain Event Event ***", data.event, "****");
+        switch (data.event) {
+          case "EnterStream":
+            //
+            break;
+  
+        }
+      });
+  }
   handleIncomingMessage = async msg => {
     if (msg.sender == this.props.accounts[0]) {
       return false;

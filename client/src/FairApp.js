@@ -8,17 +8,20 @@ window.utils = utils;
 window.ethers = ethers;
 
 class FairApp extends Component {
-
+    state ={chainData: {}, balance: 0}
 
     componentDidMount = async  (then) =>{
       this.getChainStateData(async (data)=>{
+        console.log('????', )
         this.setState({
+          
+          chainData: {
             merchant: data.merchant,
             merkelRoot: data.merkelRoot,
             price: data.price,
             dataPacketsCount: data.dataPacketsCount,
-            balance: 0
-        })
+        
+        }        })
     })
     }
     getChainStateData = async (then) =>{
@@ -38,6 +41,8 @@ class FairApp extends Component {
              signingKey={this.props.signingKey}
              isMerchant={this.props.isMerchant}
              getChainStateData = {this.getChainStateData}
+             chainData = {this.state.chainData}
+             balance={this.state.balance}
         
       />:       <Client
       sendMessage ={this.sendMessage}
@@ -48,6 +53,9 @@ class FairApp extends Component {
       signingKey={this.props.signingKey}
       isMerchant={this.props.isMerchant}
       getChainStateData = {this.getChainStateData}
+      chainData = {this.state.chainData}
+      balance={this.state.balance}
+
     />
       
       }
