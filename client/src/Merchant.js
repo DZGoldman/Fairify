@@ -29,7 +29,7 @@ class Merchant extends Component {
 
   };
   initData = async (index) =>{
-    const data = [this.state.sampleData, this.state.musicData, this.state.textData];
+    const data = [this.state.sampleData, this.state.musicData, this.state.textData][index];
     const leaves = data.map(x => keccak256(x)).sort(Buffer.compare)
     const tree = new MerkleTree(leaves,keccak256)
     const root = buf2hex(tree.getRoot());

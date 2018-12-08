@@ -10,7 +10,8 @@ const buf2hex = x => '0x'+x.toString('hex')
 
 class Client extends Component {
   state = {
-    leavesAsHexes:[]
+    leavesAsHexes:[],
+    merketRootVerified: false
   }
 
   componentDidMount = async () => {
@@ -66,7 +67,7 @@ class Client extends Component {
     const tree = new MerkleTree(leaves, keccak256)
     const root = buf2hex(tree.getRoot());
     if (root == this.props.chainData.merkelRoot){
-      console.log('Sucess!!!!')
+      this.setState({merkelRootVerified: true})
     } else {
       console.warn('merkelization failed')
     }
@@ -114,7 +115,13 @@ class Client extends Component {
 
 
   render() {
-    return <div className="App">client app</div>;
+    return <div className="App">client app
+    
+    {this.state.merkelRootVerified &&
+      <div>merkel root verified! ready to start
+        <button onClick={this.enter}>start stream</button>
+      </div>}
+    </div>;
   }
 }
 
