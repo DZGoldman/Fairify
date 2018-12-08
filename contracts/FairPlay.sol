@@ -102,7 +102,7 @@ event ContentDispute(string contentDisputeDataPacket);
    }
 
    function merchantClaimsAll() public payable  {
-        cs.merchant.transfer(this.balance);
+        cs.merchant.transfer(cs.price*2);
    }
 
 
