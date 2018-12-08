@@ -31,7 +31,10 @@ class FairApp extends Component {
       then && then(data)
     }
 
-    getAndSetData = () =>{
+    getAndSetData = (then) =>{
+      if(!then){
+        then = ()=>{}
+      }
       this.getChainStateData(async (data)=>{
         this.setState({
           chainData: {
@@ -41,7 +44,7 @@ class FairApp extends Component {
             dataPacketsCount: data.dataPacketsCount,
         
         }        
-      })
+      }, then)
     })
     }
 

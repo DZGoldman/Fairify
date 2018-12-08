@@ -105,9 +105,7 @@ class App extends Component {
     }
     return (
       <div className="App">
-        <h1 onClick = {this.runExample}>Click to test contract</h1>
-        <h2>{this.state.accounts[0]}</h2>
-        <div>The stored value is: {this.state.storageValue}</div>
+ 
         <FairApp
           sendMessage ={this.sendMessage}
           wallet={this.state.wallet}

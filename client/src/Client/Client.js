@@ -44,11 +44,17 @@ class Client extends Component {
             this.props.getAndSetData();
             break;
           case "Init":
-          this.props.getAndSetData();
-            break;
-  
-        }
-      });
+          this.props.getAndSetData(()=>{
+            this.props.sendMessage(   
+               {
+                 to:this.props.merchant, 
+                from: this.props.client,
+               type: 'readyToStart'
+             });
+          
+        })
+        break;
+      }});
   }
 
   beEvil = async() => {
@@ -72,18 +78,20 @@ class Client extends Component {
   };
 
   handleMerkleLeaves =  async (msg) => {
-    var leaves = msg.data.leaves;
-    console.log('LEAVESPRE', leaves)
-    leaves = leaves.map((leaf) => Buffer.from(leaf))
-    console.log('LEAVESPost', leaves)
-
-    const tree = new MerkleTree(leaves, keccak256)
-    const root = buf2hex(tree.getRoot());
-    if (root == this.props.chainData.merkelRoot){
-      this.setState({merkelRootVerified: true})
-    } else {
-      console.warn('merkelization failed')
-    }
+    this.props.getAndSetData(()=>{
+      var leaves = msg.data.leaves;
+      leaves = leaves.map((leaf) => Buffer.from(leaf))
+      window.leaves = leaves
+  
+      const tree = new MerkleTree(leaves, keccak256)
+      const root = buf2hex(tree.getRoot());
+      if (root == this.props.chainData.merkelRoot){
+        this.setState({merkelRootVerified: true})
+      } else {
+        console.warn('merkelization failed')
+      }
+    })
+ 
   }
 
   respondToDataPacket = async (msg)=> {

@@ -58,7 +58,7 @@ class Merchant extends Component {
             this.handleClientCashOut(data.args.nonce);
             break;
             case "Init":
-            this.sendLeaves();
+            // this.sendLeaves();
             break;
             
   
@@ -133,6 +133,9 @@ class Merchant extends Component {
     switch (msg.data.type) {
       case "payment":
         this.handleIncomingPayment(msg.data)
+        break;
+        case "readyToStart":
+        this.sendLeaves();
         break;
 
     }
