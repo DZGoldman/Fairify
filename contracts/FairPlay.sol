@@ -24,7 +24,7 @@ ChainState cs;
     string dataPacket;
     
   }
-event EnterStream(address _client);
+event EnterStream(address client);
 
    constructor(bytes32 _merketRoot, uint _dataPacketsCount) payable{
         cs = ChainState({

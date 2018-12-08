@@ -33,6 +33,7 @@ class Merchant extends Component {
   }
 
   initiateStream = async (client) => {
+    console.log('initing stream',client )
     this.props.setParentState({client})
     this.sendDataPacket()
   }
@@ -61,18 +62,26 @@ class Merchant extends Component {
       type: 'dataPacket'
     })
     })
+  }
 
-
-
+  handleIncomingPayment = async (data) =>{
+    const stateDigest = await this.props.guessContract.stateToDigest(data.appState);
+    let recovered = utils.recoverAddress(stateDigest, data.signature);
+    // if (recovered != this.props.chainData.client) {
+    //   console.log('invalid sig')
+    //   return false;
+    // } else {
+    //     console.log('valid signature')
+    // }
+    this.sendDataPacket()
   }
   handleIncomingMessage = async msg => {
     if (msg.sender == this.props.accounts[0]) {
       return false;
     }
-    console.log("MESSAGE RECEIVED:", msg);
     switch (msg.data.type) {
       case "payment":
-        this.sendDataPacket()
+        this.handleIncomingPayment(msg.data)
         break;
 
     }
