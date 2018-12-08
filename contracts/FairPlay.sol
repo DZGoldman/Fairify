@@ -125,7 +125,7 @@ event EnterStream(address client);
       require(now < cs.timeout);
       require(msg.sender == cs.merchant);
 
-      require(cs.contentDisputeDataPacket != '');
+      require(bytes(cs.contentDisputeDataPacket).length!= 0);
 
       bool result = verify(_proof, cs.merkelRoot, keccak256(cs.contentDisputeDataPacket));
 
