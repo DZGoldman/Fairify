@@ -27,7 +27,8 @@ class FairApp extends Component {
     getChainStateData = async (then) =>{
       const data = await this.props.guessContract.getChainStateData()
       console.log(data)
-      then(data)
+      window.d = data
+      then && then(data)
     }
 
     setParentState = (newState)=>{

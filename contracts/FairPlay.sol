@@ -77,7 +77,7 @@ event ClientCashOut(uint nonce);
       }
 
     // merchant punishes client for cashing out stale txn
-    function disputeCashOut(AppState appState, bytes sig) public{
+    function disputeCashOut(AppState appState, bytes sig) public payable{
         require(now < cs.timeout);
         require(cs.cashOutDisputeNonce > 0);
         require(msg.sender == cs.merchant);
@@ -85,9 +85,14 @@ event ClientCashOut(uint nonce);
         require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
         if(appState.nonce > cs.cashOutDisputeNonce){
             // full punishment or naw?
-            settleWithNonce(cs.dataPacketsCount);
+            merchantClaimsAll();
+            // settleWithNonce(cs.dataPacketsCount);
         }
         // else give it to him?
+   }
+
+   function merchantClaimsAll() public payable  {
+        cs.merchant.transfer(this.balance);
    }
 
 

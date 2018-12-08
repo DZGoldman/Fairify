@@ -32,7 +32,7 @@ class Client extends Component {
   }
 
   beEvil = async() => {
-    this.props.guessContract.clientInitCashOut({nonce: 0, dataPacket: ''})
+    this.props.guessContract.clientInitCashOut({nonce: 1, dataPacket: ''})
   }
 
   handleIncomingMessage = async msg => {
@@ -76,10 +76,9 @@ class Client extends Component {
     console.log('datatosingn',data.appState )
     let recovered = utils.recoverAddress(stateDigest, data.signature);
     if (recovered != this.props.chainData.merchant) {
+      console.warn('invallid sig')
       return false;
-    } else {
-        console.log('valid signature')
-    }
+    } 
     // verify data
 
     // send payment if not last

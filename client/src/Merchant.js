@@ -14,7 +14,6 @@ class Merchant extends Component {
   state = {
     dataPackets: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
     latestPayment: {},
-    nonce: 0,
     appState: {nonce: -1},
     appStateSig: ''
   }
@@ -52,6 +51,10 @@ class Merchant extends Component {
   
         }
       });
+  }
+
+  test =  async () =>{
+    await this.props.guessContract.merchantClaimsAll()
   }
 
   handleClientCashOut(nonce){
