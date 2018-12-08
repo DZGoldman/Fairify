@@ -65,12 +65,10 @@ class Client extends Component {
 
     const tree = new MerkleTree(leaves, keccak256)
     const root = buf2hex(tree.getRoot());
-    console.log('MERKLEROOT', root)
     if (root == this.props.chainData.merkelRoot){
-      const leavesAsHexes = leaves.map(buf2hex)
-      this.setState({leavesAsHexes});
+      console.log('Sucess!!!!')
     } else {
-
+      console.warn('merkelization failed')
     }
   }
 

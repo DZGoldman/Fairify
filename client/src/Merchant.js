@@ -15,7 +15,8 @@ class Merchant extends Component {
     dataPackets: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
     latestPayment: {},
     appState: {nonce: -1},
-    appStateSig: ''
+    appStateSig: '',
+    leaves: []
   }
   componentDidMount = async () => {
     window.m = this
@@ -29,13 +30,22 @@ class Merchant extends Component {
     const tree = new MerkleTree(leaves,keccak256)
     const root = buf2hex(tree.getRoot());
     await this.props.guessContract.init(root, leaves.length)
- 
+    this.setState({leaves})
     // this.props.sendMessage({
     //   to:this.props.client, 
     //   from: this.props.merchant,
     //   leaves,
     //   type: 'merkelLeaves'
     // })
+    }
+
+    sendLeaves(){
+      this.props.sendMessage({
+          to:this.props.client, 
+          from: this.props.merchant,
+          leaves: this.state.leaves,
+          type: 'merkelLeaves'
+        })
     }
 
   setEvents = async () => {
@@ -47,6 +57,9 @@ class Merchant extends Component {
             break;
             case "ClientCashOut":
             this.handleClientCashOut(data.args.nonce);
+            break;
+            case "Init":
+            this.sendLeaves();
             break;
             
   
