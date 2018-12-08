@@ -4,7 +4,7 @@ import { ethers, utils } from "ethers";
 
 import AudioWidget from './AudioWidget'
 
-let dummyData = require('./DummyData.json')
+// let dummyData = require('./DummyData.json')
 
 window.utils = utils;
 window.ethers = ethers;
@@ -30,8 +30,8 @@ class Client extends Component {
       window.c = this;
     this.props.socket.on("message_data", this.handleIncomingMessage);
     this.setEvents()
-    this.getNextChunk() // get first chunk
-    this.timer = setInterval(()=> this.getNextChunk(), 1500);
+    // this.getNextChunk() // get first chunk
+    // this.timer = setInterval(()=> this.getNextChunk(), 1500);
   };
 
   setEvents = async () => {
@@ -142,23 +142,24 @@ class Client extends Component {
   }
 
 
-  getNextChunk = () => {
-    this.currentChunk += 1;
-    if (this.currentChunk > this.totalChunks) {
-      console.log(`Out of chunks at chunk #${this.currentChunk}, stopping polling`)
-      clearInterval(this.timer)
-      this.timer = null;
-      return;
-    }
-    // call api here to fetch next chunk of data?
-    console.log(`Retrieving chunk #${this.currentChunk} of ${this.totalChunks}`)
+  // getNextChunk = () => {
+  //   this.currentChunk += 1;
+  //   if (this.currentChunk > this.totalChunks) {
+  //     console.log(`Out of chunks at chunk #${this.currentChunk}, stopping polling`)
+  //     clearInterval(this.timer)
+  //     this.timer = null;
+  //     return;
+  //   }
+  //   // call api here to fetch next chunk of data?
+  //   console.log(`Retrieving chunk #${this.currentChunk} of ${this.totalChunks}`)
     
-    let newData = dummyData[`pcm_data${this.currentChunk}`]
-    this.feedNewData(newData)
-  }
-  feedNewData = (incomingAudioData) => {
-    this.audioWidgetRef.current.handleNewData(incomingAudioData)
-  }
+  //   let newData = dummyData[`pcm_data${this.currentChunk}`]
+  //   this.feedNewData(newData)
+  // }
+
+  // feedNewData = (incomingAudioData) => {
+  //   this.audioWidgetRef.current.handleNewData(incomingAudioData)
+  // }
 
   render() {
     return <div className="App">client app

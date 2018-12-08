@@ -1,6 +1,5 @@
 import React, { Component, Button } from 'react'
 import PCMPlayer from './PCMPlayer'
-let dummyData = require('./DummyData.json')
 
 class AudioWidget extends Component {
     componentWillMount() {
@@ -12,7 +11,6 @@ class AudioWidget extends Component {
             flushingTime: 2000
         });
 
-        this.data = dummyData;
         this.handleNewData = this.handleNewData.bind(this)
     }
 

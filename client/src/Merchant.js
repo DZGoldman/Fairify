@@ -6,8 +6,11 @@ const MerkleTree = require('merkletreejs')
 const keccak256 = require('keccak256')
 const buf2hex = x => '0x'+x.toString('hex')
 
+const musicData = require('./DummyData.json').pcm_data.map(chunk => { return new Uint16Array(chunk) })
+
 window.utils = utils;
 window.ethers = ethers;
+window.keccak256 = keccak256;
 
 class Merchant extends Component {
 
@@ -18,7 +21,7 @@ class Merchant extends Component {
     appStateSig: '',
     leaves: [],
     sampleData: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
-    musicData: [],
+    musicData,
     textData:[]
   }
   componentDidMount = async () => {
@@ -30,7 +33,7 @@ class Merchant extends Component {
   };
   initData = async (index) =>{
     const data = [this.state.sampleData, this.state.musicData, this.state.textData][index];
-    const leaves = data.map(x => keccak256(x)).sort(Buffer.compare)
+    const leaves = data.map(x => keccak256(Buffer.from( x ))).sort(Buffer.compare)
     const tree = new MerkleTree(leaves,keccak256)
     const root = buf2hex(tree.getRoot());
     await this.props.guessContract.init(root, leaves.length)
