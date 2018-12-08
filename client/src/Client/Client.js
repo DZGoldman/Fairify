@@ -4,8 +4,15 @@ import { ethers, utils } from "ethers";
 
 window.utils = utils;
 window.ethers = ethers;
+const MerkleTree = require('merkletreejs')
+const keccak256 = require('keccak256')
+const buf2hex = x => '0x'+x.toString('hex')
 
 class Client extends Component {
+  state = {
+    leavesAsHexes:[]
+  }
+
   componentDidMount = async () => {
       window.c = this;
     this.props.socket.on("message_data", this.handleIncomingMessage);
@@ -33,11 +40,29 @@ class Client extends Component {
       case "dataPacket":
         this.respondToDataPacket(msg)
         break;
-      case "fullMerkelTree":  
+      case "merkelLeaves":  
+        this.handleMerkleLeaves(msg)
         break;
 
     }
   };
+
+  handleMerkleLeaves =  async (msg) => {
+    var leaves = msg.data.leaves;
+    console.log('LEAVESPRE', leaves)
+    leaves = leaves.map((leaf) => new Uint8Array(leaf).buffer)
+    console.log('LEAVESPost', leaves)
+
+    const tree = new MerkleTree(leaves, keccak256)
+    const root = buf2hex(tree.getRoot());
+    console.log('MERKLEROOT')
+    if (root == this.props.chainData.merkelRoot){
+      const leavesAsHexes = leaves.map(buf2hex)
+      this.setState({leavesAsHexes});
+    } else {
+
+    }
+  }
 
   respondToDataPacket = async (msg)=> {
     // verify signature

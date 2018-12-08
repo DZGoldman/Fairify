@@ -4,5 +4,5 @@ module.exports = function(deployer, network, accounts){
   console.log(accounts)
   deployer.deploy(SimpleStorage);
   var secret = web3.sha3 ( "394857" )
-  deployer.deploy(GuessNumber, secret, 256, {from:accounts[0], value: 50000});
+  deployer.deploy(GuessNumber, secret, 8, {from:accounts[0], value: 50000});
 };

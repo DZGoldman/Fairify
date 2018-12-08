@@ -1,6 +1,10 @@
 import React, { Component } from "react";
 import "./App.css";
 import { ethers, utils } from "ethers";
+// const MerkleProof = artifacts.require('MerkleProof')
+const MerkleTree = require('merkletreejs')
+const keccak256 = require('keccak256')
+const buf2hex = x => '0x'+x.toString('hex')
 
 window.utils = utils;
 window.ethers = ethers;
@@ -8,7 +12,7 @@ window.ethers = ethers;
 class Merchant extends Component {
 
   state = {
-    dataPackets: [],
+    dataPackets: ['a', 'b', 'c', 'd', 'e', 'f' ,'g', 'h'],
     latestPayment: {},
     nonce: 0,
     appState: {nonce: 0}
@@ -16,9 +20,23 @@ class Merchant extends Component {
   componentDidMount = async () => {
     window.m = this
     this.props.socket.on("message_data", this.handleIncomingMessage);
-    this.setEvents()
-  };
+    this.setEvents();
+    this.initData()
 
+  };
+  initData = () =>{
+    const leaves = this.state.dataPackets.map(x => keccak256(x)).sort(Buffer.compare)
+    console.log('LEAVES', leaves)
+    const tree = new MerkleTree(leaves,keccak256)
+    const root = buf2hex(tree.getRoot());
+    console.log('MERKLEROOT', root)
+    this.props.sendMessage({
+      to:this.props.client, 
+      from: this.props.merchant,
+      leaves,
+      type: 'merkelLeaves'
+    })
+    }
 
   setEvents = async () => {
     this.props.guessContract.on("*", data => {
