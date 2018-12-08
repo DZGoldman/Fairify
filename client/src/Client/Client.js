@@ -15,7 +15,8 @@ const buf2hex = x => '0x'+x.toString('hex')
 class Client extends Component {
   state = {
     leavesAsHexes:[],
-    merketRootVerified: false
+    merketRootVerified: false,
+    hexLeavesSet: []
   }
 
   constructor(props) {
@@ -81,12 +82,12 @@ class Client extends Component {
     this.props.getAndSetData(()=>{
       var leaves = msg.data.leaves;
       leaves = leaves.map((leaf) => Buffer.from(leaf))
-      window.leaves = leaves
+      const hexLeavesSet = new Set (leaves.map(buf2hex))
   
       const tree = new MerkleTree(leaves, keccak256)
       const root = buf2hex(tree.getRoot());
       if (root == this.props.chainData.merkelRoot){
-        this.setState({merkelRootVerified: true})
+        this.setState({merkelRootVerified: true, hexLeavesSet:hexLeavesSet})
       } else {
         console.warn('merkelization failed')
       }
@@ -106,17 +107,24 @@ class Client extends Component {
       return false;
     } 
     // verify data
+    const dataPacket = data.appState.dataPacket;
+    const packetAsHex = buf2hex(keccak256(dataPacket));
+    if ( !this.state.hexLeavesSet.has(packetAsHex)){
+      console.warn('INVALID CONTENT!')
+      return
+
+    }
 
     // send payment if not last
     const totalPackets = this.props.chainData.dataPacketsCount.toNumber();
     if (data.appState.nonce < totalPackets){
         
         const signature = this.props.signingKey.signDigest(stateDigest);
-        let recovered = utils.recoverAddress(stateDigest, signature);
+        // let recovered = utils.recoverAddress(stateDigest, signature);
         
-        if (recovered != this.props.client){
-            console.warn('INVALID sig!!!', recovered, this.props.client)
-        }
+        // if (recovered != this.props.client){
+        //     console.warn('INVALID sig!!!', recovered, this.props.client)
+        // }
         this.props.sendMessage({
             to:this.props.merchant, 
             from: this.props.client,
