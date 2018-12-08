@@ -2,6 +2,10 @@ pragma solidity ^0.4.23;
 pragma experimental ABIEncoderV2;
 contract FairPlay {
 
+ 
+    // timouts for dispute and for whole interaction for cashing out
+    
+struct ChainState {
     address merchant;
     address client;
     bytes32 merkelRoot;
@@ -9,14 +13,11 @@ contract FairPlay {
     uint dataPacketsCount;
     // float?
     address contractAddress;
-    uint256  public timeout;
+    uint256 timeout;
     uint cashOutDisputeNonce;
-    bytes32 contentDisputeMerkelLeaaf;
-    bool settled;
-
-    // timouts for dispute and for whole interaction for cashing out
-    
-
+    bytes32 contentDisputeMerkelLeaf;
+}
+ChainState cs;
 
   struct AppState {
     uint nonce;
@@ -24,52 +25,63 @@ contract FairPlay {
     
   }
   
-  AppState cashOutState; 
    constructor(bytes32 _merketRoot, uint _dataPacketsCount) payable{
-        merkelRoot = _merketRoot;
-        price = msg.value;
-        merchant = msg.sender;
-        dataPacketsCount = _dataPacketsCount;
-        contractAddress = address(this);
+        cs = ChainState({
+            merchant: msg.sender,
+            client: address(0),
+            merkelRoot: _merketRoot,
+            price: msg.value,
+            dataPacketsCount:  _dataPacketsCount,
+            timeout: 0,
+            contractAddress: address(this),
+            cashOutDisputeNonce: 0,
+            contentDisputeMerkelLeaf: ''
+        });
+   
         
    }
    
 //   client enters contract
    function enter() payable public {
-       require(msg.value == price);
-       client = msg.sender;
+       require(msg.value == cs.price);
+       cs.client = msg.sender;
    }
+   
+   function getChainStateData () public view returns(ChainState){
+       return cs;
+   }
+
    
 //   convert any given app state to signable digest
    function stateToDigest(AppState appState) public returns (bytes32){
         bytes32 inputAppHash = keccak256(abi.encode(appState));
-        return keccak256(contractAddress, inputAppHash);
+        return keccak256(cs.contractAddress, inputAppHash);
    }    
    
 //   client starts a "claim" by trying to cash out (note that client has the right to claim w/ any appState)
    function clientInitCashOut(AppState appState) public {
-       require(msg.sender == client);
-       cashOutDisputeNonce = appState.nonce;
-       timeout = now + 3600;
+       require(msg.sender == cs.client);
+       cs.cashOutDisputeNonce = appState.nonce;
+       cs.timeout = now + 3600;
    }
 
     // clients claim was not disputed, can settle
       function clientClaimFunds() public {
-          require(now > timeout);
-          require(cashOutDisputeNonce > 0);
-          settleWithNonce(cashOutDisputeNonce);
+          require(now > cs.timeout);
+          require(cs.cashOutDisputeNonce > 0);
+          settleWithNonce(cs.cashOutDisputeNonce);
       }
 
     // merchant punishes client for cashing out stale txn
     function disputeCashOut(AppState appState, bytes sig) public{
-        require(now < timeout);
-        require(cashOutDisputeNonce > 0);
-        require(msg.sender == merchant);
+        require(now < cs.timeout);
+        require(cs.cashOutDisputeNonce > 0);
+        require(msg.sender == cs.merchant);
         bytes32 digest = stateToDigest(appState);
         require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
-        if(appState.nonce > cashOutDisputeNonce){
+        if(appState.nonce > cs.cashOutDisputeNonce){
             // full punishment or naw?
-            settleWithNonce(dataPacketsCount);
+            settleWithNonce(cs.dataPacketsCount);
         }
         // else give it to him?
    }
@@ -77,8 +89,8 @@ contract FairPlay {
 
     // finalizes - merchant can  always cash out with client's signature
    function merchantCashOut(AppState appState, bytes sig) public {
-       require(msg.sender == merchant);
-       if (appState.nonce == dataPacketsCount){
+       require(msg.sender == cs.merchant);
+       if (appState.nonce == cs.dataPacketsCount){
            settleWithNonce(appState.nonce);
        } else {
             bytes32 digest = stateToDigest(appState);
@@ -88,11 +100,11 @@ contract FairPlay {
    }
     // client requests merkel proof of content
      function disputeContent(AppState appState, bytes sig){
-            require(msg.sender ==  client);
+            require(msg.sender ==  cs.client);
             bytes32 digest = stateToDigest(appState);
             require(recoverSigner(digest, sig) == counterPartyOf(msg.sender));
-            contentDisputeMerkelLeaaf = appState.merkelLeaf;
-            timeout = now + 3600;
+            cs.contentDisputeMerkelLeaf = appState.merkelLeaf;
+            cs.timeout = now + 3600;
         }
 
 // finalizes:
@@ -105,19 +117,19 @@ contract FairPlay {
 
 
    function settleWithNonce(uint nonce) private {
-       uint costPer = price / dataPacketsCount;
-       client.transfer(costPer * nonce);     
-       merchant.transfer(address(this).balance);
+       uint costPer = cs.price / cs.dataPacketsCount;
+       cs.client.transfer(costPer * nonce);     
+       cs.merchant.transfer(address(this).balance);
    }
 
   
 
    
     function counterPartyOf(address user)public returns(address){
-        if (user == merchant){
-            return client;
-        } else if (user== client){
-            return user;
+        if (user == cs.merchant){
+            return cs.client;
+        } else if (user== cs.client){
+            return cs.merchant;
         }
         require(false);
     }

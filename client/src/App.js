@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import SimpleStorageContract from "./contracts/SimpleStorage.json";
-import GuessNumberContract from "./contracts/GuessNumber.json";
+import GuessNumberContract from "./contracts/FairPlay.json";
 import getWeb3 from "./utils/getWeb3";
 import truffleContract from "truffle-contract";
 import axios from "axios";
@@ -16,7 +16,7 @@ const tkey2 = "756BC8C44936D9CC1B48398B23ABD9DA6D706FB77509EDA2F4BAE5B8BD67A600"
   // ganache-cli -m "matter tobacco now banana panel impulse fun renew recall obscure leaf remember"
 
 class App extends Component {
-  state = { wallet: null, storageValue: 0, web3: null, accounts: null, contract: null, einstance: null, socket:null };
+  state = { wallet: null, storageValue: 0, web3: null, accounts: null, contract: null, einstance: null, socket:null , isMerchant: false};
 
   sendMessage = async (msg) => {
     this.state.socket.emit('message', {sender: this.state.accounts[0], data: msg})
@@ -42,11 +42,12 @@ class App extends Component {
       let provider = await new ethers.providers.Web3Provider(web3.currentProvider);
       let a = await provider.listAccounts()
 
-      var wallet, signingKey;
+      var wallet, signingKey, isMerchant = false;
       if (accounts[0] == "0xAEFeC101B51cf5f1A4e12Db9cce8901c63497784"){
 
         wallet = new ethers.Wallet(pkey, provider)
         signingKey =new ethers.utils.SigningKey(pkey);
+        isMerchant = true
       } else {
         wallet = new ethers.Wallet(tkey2, provider)
         signingKey =new ethers.utils.SigningKey(tkey2);
@@ -70,7 +71,7 @@ class App extends Component {
 
 
 
-      this.setState({signingKey, guessContract:guessEthInstance, wallet, web3, accounts, contract: instance, storageValue:value.toNumber(), einstance,socket  });
+      this.setState({signingKey, guessContract:guessEthInstance, wallet, web3, accounts, contract: instance, storageValue:value.toNumber(), einstance,socket, isMerchant  });
 
       socket.on('connect', (r, e) => {
         this.setState({socket_id: socket.id, socket})
@@ -104,7 +105,7 @@ class App extends Component {
     }
     return (
       <div className="App">
-        <h1 onClick = {this.runExample}>Good to Go!</h1>
+        <h1 onClick = {this.runExample}>Click to test contract</h1>
         <h2>{this.state.accounts[0]}</h2>
         <div>The stored value is: {this.state.storageValue}</div>
         <FairApp
@@ -114,6 +115,7 @@ class App extends Component {
           socket={this.state.socket}
           accounts={this.state.accounts}
           signingKey={this.state.signingKey}
+          isMerchant={this.state.isMerchant}
         />
       </div>
     );
