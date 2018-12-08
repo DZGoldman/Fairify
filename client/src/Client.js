@@ -42,6 +42,7 @@ class Client extends Component {
   respondToDataPacket = async (msg)=> {
     // verify signature
     const data = msg.data;
+    console.log('nonce', data.appState.nonce)
     const stateDigest = await this.props.guessContract.stateToDigest(data.appState);
     let recovered = utils.recoverAddress(stateDigest, data.signature);
     if (recovered != this.props.chainData.merchant) {
@@ -52,7 +53,18 @@ class Client extends Component {
     // verify data
 
     // send payment if not last
-    // const totalPackets = this.props.chainData.dataPacketsCount.toNumber()
+    const totalPackets = this.props.chainData.dataPacketsCount.toNumber();
+    if (data.appState.nonce < totalPackets){
+        const signature = this.props.signingKey.signDigest(stateDigest);
+        this.props.sendMessage({
+            to:this.props.client, 
+            from: this.props.merchant,
+            appState: data.appState,
+            signature,
+            type: 'payment'
+          })
+
+    }
 
   }
 

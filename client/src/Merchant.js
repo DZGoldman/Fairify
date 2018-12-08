@@ -10,7 +10,8 @@ class Merchant extends Component {
   state = {
     dataPackets: [],
     latestPayment: {},
-    nonce: 0
+    nonce: 0,
+    appState: {nonce: 0}
   }
   componentDidMount = async () => {
     window.m = this
@@ -37,10 +38,19 @@ class Merchant extends Component {
   }
 
   sendDataPacket = async () =>{
+    const newNonce = this.state.appState.nonce +1
+    if (newNonce >= this.props.chainData.dataPacketsCount.toNumber()){
+      return
+      console.warn('DONE!')
+    }
+    console.log('NONCE', newNonce)
     const appState = {
-      nonce: this.state.nonce +1,
+      nonce: newNonce,
       dataPacket: "some data" //TODO 
     };
+
+    this.setState({appState}, async ()=>{
+
     const stateDigest = await this.props.guessContract.stateToDigest(appState)
     const signature = this.props.signingKey.signDigest(stateDigest);
     this.props.sendMessage({
@@ -50,6 +60,10 @@ class Merchant extends Component {
       signature,
       type: 'dataPacket'
     })
+    })
+
+
+
   }
   handleIncomingMessage = async msg => {
     if (msg.sender == this.props.accounts[0]) {
@@ -58,6 +72,7 @@ class Merchant extends Component {
     console.log("MESSAGE RECEIVED:", msg);
     switch (msg.data.type) {
       case "payment":
+        this.sendDataPacket()
         break;
 
     }
