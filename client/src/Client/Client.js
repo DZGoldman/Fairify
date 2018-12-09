@@ -8,6 +8,7 @@ import AudioWidget from './AudioWidget'
 
 window.utils = utils;
 window.ethers = ethers;
+window.Buffer = Buffer;
 const MerkleTree = require('merkletreejs')
 const keccak256 = require('keccak256')
 const buf2hex = x => '0x'+x.toString('hex')
@@ -98,6 +99,7 @@ class Client extends Component {
   respondToDataPacket = async (msg)=> {
     // verify signature
     const data = msg.data;
+    console.log('received', data)
     console.log('nonce', data.appState.nonce)
     const stateDigest = await this.props.guessContract.stateToDigest(data.appState);
     console.log('datatosingn',data.appState )
@@ -114,7 +116,7 @@ class Client extends Component {
       return
 
     }
-
+    this.feedNewData(new Int16Array(Buffer.from(dataPacket, 'hex')))
     // send payment if not last
     const totalPackets = this.props.chainData.dataPacketsCount.toNumber();
     if (data.appState.nonce < totalPackets){
@@ -157,9 +159,9 @@ class Client extends Component {
   //   this.feedNewData(newData)
   // }
 
-  // feedNewData = (incomingAudioData) => {
-  //   this.audioWidgetRef.current.handleNewData(incomingAudioData)
-  // }
+  feedNewData = (incomingAudioData) => {
+    this.audioWidgetRef.current.handleNewData(incomingAudioData)
+  }
 
   render() {
     return <div className="App">client app

@@ -18,7 +18,7 @@ class AudioWidget extends Component {
     }
 
     handleNewData(newData) {
-        console.log("Feeding new data")
+        console.log("Feeding new data", newData)
         let volumeAdjustedData = newData.map((value) => { return value*25 })
         this.player.feed(new Int16Array(volumeAdjustedData))
     }

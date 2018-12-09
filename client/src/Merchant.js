@@ -33,7 +33,7 @@ class Merchant extends Component {
   };
   initData = async (index) =>{
     const data = [this.state.sampleData, this.state.musicData, this.state.textData][index];
-    const leaves = data.map(x => keccak256(Buffer.from( x ))).sort(Buffer.compare)
+    const leaves = data.map(x => keccak256(Buffer.from( x ).toString('hex'))).sort(Buffer.compare)
     const tree = new MerkleTree(leaves,keccak256)
     const root = buf2hex(tree.getRoot());
     await this.props.guessContract.init(root, leaves.length)
@@ -98,12 +98,13 @@ class Merchant extends Component {
     console.log('NONCE', newNonce)
     const appState = {
       nonce: newNonce,
-      dataPacket: this.state.dataPackets[newNonce] //TODO 
+      dataPacket: Buffer.from(this.state.dataPackets[newNonce]).toString('hex') //TODO 
       // this.state.datapackets[newNonce]
     };
 
     this.setState({appState}, async ()=>{
 
+    console.log("appState", appState)
     const stateDigest = await this.props.guessContract.stateToDigest(appState)
     const signature = this.props.signingKey.signDigest(stateDigest);
     this.props.sendMessage({
@@ -120,6 +121,7 @@ class Merchant extends Component {
     const stateDigest = await this.props.guessContract.stateToDigest(data.appState);
     let recovered = utils.recoverAddress(stateDigest, data.signature);
 
+    console.log("PAYMENT RECEIVED", recovered)
     if (recovered != this.props.client) {
       console.warn('INVALID sig!!!', recovered, this.props.client)
       return false;
